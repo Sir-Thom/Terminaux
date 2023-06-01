@@ -8,19 +8,19 @@ use std::{
     thread::{self, sleep},
     time::Duration,
 };
-use tauri::{async_runtime::Mutex as AsyncMutex, State, WindowBuilder};
+use tauri::{async_runtime::Mutex as AsyncMutex, command, Manager, State, Window};
 
 struct AppState {
     pty_pair: Arc<AsyncMutex<PtyPair>>,
     writer: Arc<AsyncMutex<Box<dyn Write + Send>>>,
 }
 
-#[tauri::command]
-async fn async_write_to_pty(data: &str, state: State<'_, AppState>) -> Result<(), ()> {
+#[command]
+async fn async_write_to_pty(data: String, state: State<'_, AppState>) -> Result<(), ()> {
     write!(state.writer.lock().await, "{}", data).map_err(|_| ())
 }
 
-#[tauri::command]
+#[command]
 async fn async_resize_pty(rows: u16, cols: u16, state: State<'_, AppState>) -> Result<(), ()> {
     state
         .pty_pair
@@ -40,8 +40,8 @@ fn main() {
 
     let pty_pair = pty_system
         .openpty(PtySize {
-            rows: 80,
-            cols: 48,
+            rows: 24,
+            cols: 80,
             pixel_width: 0,
             pixel_height: 0,
         })
@@ -62,29 +62,36 @@ fn main() {
     let writer = pty_pair.master.take_writer().unwrap();
 
     let reader = Arc::new(Mutex::new(Some(BufReader::new(reader))));
-
+    let output = Arc::new(Mutex::new(String::new())); // Added output buffer
     tauri::Builder::default()
+        .manage(AppState {
+            pty_pair: Arc::new(AsyncMutex::new(pty_pair)),
+            writer: Arc::new(AsyncMutex::new(writer)),
+        })
         .on_page_load(move |window, _| {
             let window = window.clone();
             let reader = reader.clone();
-            let window_size = window.inner_size().unwrap();
-            println!("Window size: {}x{}", window_size.width, window_size.height);
+            let output = output.clone(); // Clone output buffer
+
             thread::spawn(move || {
                 let reader = reader.lock().unwrap().take();
                 if let Some(mut reader) = reader {
                     loop {
                         sleep(Duration::from_millis(1));
-                        let mut data = Vec::new();
-                        if reader.read_until(b'\n', &mut data).unwrap() > 0 {
+                        let data = reader.fill_buf().unwrap().to_vec();
+                        reader.consume(data.len());
+                        if data.len() > 0 {
+                            output
+                                .lock()
+                                .unwrap()
+                                .push_str(&String::from_utf8_lossy(&data));
                             window.emit("data", data).unwrap();
+
+                            // Append to output buffer
                         }
                     }
                 }
             });
-        })
-        .manage(AppState {
-            pty_pair: Arc::new(AsyncMutex::new(pty_pair)),
-            writer: Arc::new(AsyncMutex::new(writer)),
         })
         .invoke_handler(tauri::generate_handler![
             async_write_to_pty,
