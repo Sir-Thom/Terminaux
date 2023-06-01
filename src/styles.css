@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+}
+
+/*#terminal {
+  height: 110vh;
+  margin: 0;
+}*/
