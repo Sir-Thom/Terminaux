@@ -52,9 +52,9 @@
   position: absolute;
   top: 0;
   /**
-     * The z-index of the helpers must be higher than the canvases in order for
-     * IMEs to appear on top.
-     */
+   * The z-index of the helpers must be higher than the canvases in order for
+   * IMEs to appear on top.
+   */
   z-index: 5;
 }
 
@@ -72,7 +72,7 @@
   z-index: -5;
   /** Prevent wrapping so the IME appears against the textarea at the correct position */
   white-space: nowrap;
-  overflow: hidden;
+  overflow: clip;
   resize: none;
 }
 
@@ -92,7 +92,7 @@
 
 .xterm .xterm-viewport {
   /* On OS X this is required in order for the scroll bar to appear fully opaque */
-  background-color: #000;
+
   overflow-y: scroll;
   cursor: default;
   position: absolute;
@@ -100,8 +100,6 @@
   left: 0;
   top: 0;
   bottom: 0;
-  width: 100vw;
-  height: 100vh;
 }
 
 .xterm .xterm-screen {
@@ -151,6 +149,7 @@
   right: 0;
   z-index: 10;
   color: transparent;
+  pointer-events: none;
 }
 
 .xterm .live-region {
@@ -162,7 +161,9 @@
 }
 
 .xterm-dim {
-  opacity: 0.5;
+  /* Dim should not apply to background, so the opacity of the foreground color is applied
+   * explicitly in the generated class and reset to 1 here */
+  opacity: 1 !important;
 }
 
 .xterm-underline-1 {
@@ -181,6 +182,26 @@
   text-decoration: dashed underline;
 }
 
+.xterm-overline {
+  text-decoration: overline;
+}
+
+.xterm-overline.xterm-underline-1 {
+  text-decoration: overline underline;
+}
+.xterm-overline.xterm-underline-2 {
+  text-decoration: overline double underline;
+}
+.xterm-overline.xterm-underline-3 {
+  text-decoration: overline wavy underline;
+}
+.xterm-overline.xterm-underline-4 {
+  text-decoration: overline dotted underline;
+}
+.xterm-overline.xterm-underline-5 {
+  text-decoration: overline dashed underline;
+}
+
 .xterm-strikethrough {
   text-decoration: line-through;
 }
@@ -188,6 +209,12 @@
 .xterm-screen .xterm-decoration-container .xterm-decoration {
   z-index: 6;
   position: absolute;
+}
+
+.xterm-screen
+  .xterm-decoration-container
+  .xterm-decoration.xterm-decoration-top-layer {
+  z-index: 7;
 }
 
 .xterm-decoration-overview-ruler {
