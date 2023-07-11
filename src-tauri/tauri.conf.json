@@ -12,9 +12,12 @@
   },
   "tauri": {
     "allowlist": {
-      "all": false,
+      "all": true,
+      "os": {
+        "all": true
+      },
       "shell": {
-        "all": false,
+        "all": true,
         "open": true
       }
     },
@@ -38,8 +41,8 @@
         "fullscreen": false,
         "resizable": true,
         "title": "Terminaux",
-        "width": 1000,
-        "height": 800,
+        "width": 1800,
+        "height": 1600,
         "transparent": false
       }
     ]

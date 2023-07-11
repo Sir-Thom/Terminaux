@@ -1,14 +1,22 @@
 import { createEffect, createSignal, onCleanup } from "solid-js";
-import { ITerminalAddon, Terminal } from "xterm";
+import { ITerminalAddon, ITheme, Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
 import { WebLinksAddon } from "xterm-addon-web-links";
 import "xterm/css/xterm.css";
 import { invoke } from "@tauri-apps/api";
 import { Event, listen } from "@tauri-apps/api/event";
+import theme from "../data/Kanagawa-Dragon.json";
+import { appWindow } from "@tauri-apps/api/window";
 
 function TerminalScreen() {
   const [terminalElement, setTerminalElement] =
     createSignal<HTMLElement | null>(null);
+  const xtermTheme: ITheme = {};
+  for (const key in theme) {
+    if (key !== "name") {
+      xtermTheme[key as keyof ITheme] = theme[key];
+    }
+  }
   const term = new Terminal({
     fontFamily: [
       "Noto Mono for Powerline",
@@ -33,53 +41,29 @@ function TerminalScreen() {
     cursorBlink: true,
     cursorStyle: "bar",
     cursorWidth: 2,
-    overviewRulerWidth: 100,
     allowProposedApi: false,
     tabStopWidth: 4,
     smoothScrollDuration: 0,
     scrollback: 80,
     scrollOnUserInput: true,
     scrollSensitivity: 1,
+    cols: 80,
+    rows: 24,
 
-    theme: {
-      cursor: "#ffffff", // Cursor color
-      cursorAccent: "#000000", // Cursor accent color
-      selectionInactiveBackground: "#ffffff", // Inactive selection background color
-      selectionBackground: "#ffffff", // Selection background color
-      background: "rgb(47, 47, 47)", // Background color
-      foreground: "#fff",
-      // Text color
-      black: "#000000",
-      red: "#ff0000",
-      green: "#33ff00",
-      yellow: "#ffff00",
-      blue: "#0066ff",
-      magenta: "#cc00ff",
-      cyan: "#00ffff",
-      // Bright colors
-      brightBlack: "#808080",
-      brightRed: "#ff0000",
-      brightGreen: "#33ff00",
-      brightYellow: "#ffff00",
-      brightBlue: "#0066ff",
-      brightMagenta: "#cc00ff",
-      brightCyan: "#00ffff",
-      brightWhite: "#ffffff",
-    },
+    theme: xtermTheme,
   });
-  const fitTerminal = async () => {
-    try {
-      fitAddon.fit();
 
-      await invoke("async_shell");
-      await invoke("async_resize_pty", {
-        rows: term.rows,
-        cols: term.cols,
-      });
-    } catch (e) {
-      console.log(e);
-    }
+  const fitTerminal = async () => {
+    fitAddon.fit();
+
+    console.log("Resizing terminal");
+    console.log(term.rows, term.cols);
+    await invoke("async_resize_pty", {
+      rows: term.rows,
+      cols: term.cols,
+    });
   };
+
   const fitAddon = new FitAddon();
 
   createEffect(() => {
@@ -89,12 +73,17 @@ function TerminalScreen() {
       term.loadAddon(new WebLinksAddon());
       term.loadAddon(fitAddon);
       term.open(element);
+
+      // Invoke async_shell command to create the shell process
+      invoke("async_shell").catch((error) => {
+        console.error("Error creating shell:", error);
+      });
+
       fitTerminal();
     }
   });
 
   const writeToTerminal = (ev: Event<string>) => {
-    console.log(ev.payload);
     term.write(ev.payload);
   };
 
@@ -110,8 +99,10 @@ function TerminalScreen() {
   });
 
   term.onData(writeToPty);
+  appWindow.emit("resize", fitTerminal);
   window.addEventListener("resize", fitTerminal);
   listen("data", writeToTerminal);
+
   fitTerminal();
 
   return (
