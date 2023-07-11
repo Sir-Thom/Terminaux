@@ -4,6 +4,15 @@
 
 body {
   margin: 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  font-family: "Inter";
+  letter-spacing: 0.6px;
+  word-spacing: 0.66px;
+  background: var(--app-background);
 }
 
 /*#terminal {
