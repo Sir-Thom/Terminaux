@@ -41,8 +41,8 @@
         "fullscreen": false,
         "resizable": true,
         "title": "Terminaux",
-        "width": 1800,
-        "height": 1600,
+        "width": 800,
+        "height": 600,
         "transparent": false
       }
     ]

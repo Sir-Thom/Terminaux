@@ -11,7 +11,7 @@ function TerminalTab() {
     setActiveTab(newTabId);
   };
 
-  const removeTab = (tabId) => {
+  const removeTab = (tabId: number) => {
     const newTabs = tabs().filter((tab) => tab.id !== tabId);
     setTabs(newTabs);
 

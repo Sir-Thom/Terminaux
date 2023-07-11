@@ -11,12 +11,8 @@ import { appWindow } from "@tauri-apps/api/window";
 function TerminalScreen() {
   const [terminalElement, setTerminalElement] =
     createSignal<HTMLElement | null>(null);
-  const xtermTheme: ITheme = {};
-  for (const key in theme) {
-    if (key !== "name") {
-      xtermTheme[key as keyof ITheme] = theme[key];
-    }
-  }
+  const xtermTheme: ITheme = { ...theme };
+
   const term = new Terminal({
     fontFamily: [
       "Noto Mono for Powerline",
