@@ -1,66 +1,18 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-use portable_pty::{native_pty_system, CommandBuilder, PtyPair, PtySize};
-use std::process::exit;
+mod pty;
+mod shell;
+mod utils;
+use portable_pty::{native_pty_system, PtySize};
+use pty::pty::{resize_pty, write_to_pty};
+use shell::shell::async_shell;
 use std::{
-    io::{BufRead, BufReader, Write},
+    io::{BufRead, BufReader},
     sync::{Arc, Mutex},
     thread::{self, sleep},
     time::Duration,
 };
-use tauri::{async_runtime::Mutex as AsyncMutex, command, Manager, State, Window};
-#[macro_use]
-extern crate shells;
-
-static mut DEFAULT_ROWS: u16 = 24;
-static mut DEFAULT_COLS: u16 = 80;
-static mut PIXEL_WIDTH: u16 = 0;
-static mut PIXEL_HEIGHT: u16 = 0;
-
-struct AppState {
-    pty_pair: AsyncMutex<PtyPair>,
-    writer: AsyncMutex<Box<dyn Write + Send>>,
-}
-
-#[tauri::command]
-async fn async_shell(state: State<'_, AppState>) -> Result<(), String> {
-    #[cfg(target_os = "windows")]
-    let cmd = CommandBuilder::new("powershell.exe");
-    #[cfg(not(target_os = "windows"))]
-    let cmd = CommandBuilder::new("bash");
-
-    let mut child = state
-        .pty_pair
-        .lock()
-        .await
-        .slave
-        .spawn_command(cmd)
-        .map_err(|err| err.to_string())?;
-
-    thread::spawn(move || {
-        let status = child.wait().unwrap();
-        exit(status.exit_code() as i32)
-    });
-    Ok(())
-}
-#[command]
-async fn async_write_to_pty(data: String, state: State<'_, AppState>) -> Result<(), ()> {
-    write!(state.writer.lock().await, "{}", data).map_err(|_| ())
-}
-
-#[command]
-async fn async_resize_pty(rows: u16, cols: u16, state: State<'_, AppState>) -> Result<(), ()> {
-    state
-        .pty_pair
-        .lock()
-        .await
-        .master
-        .resize(PtySize {
-            rows,
-            cols,
-            ..Default::default()
-        })
-        .map_err(|_| ())
-}
+use tauri::async_runtime::Mutex as AsyncMutex;
+use utils::app_state::AppState;
 
 fn main() {
     let pty_system = native_pty_system();
@@ -108,8 +60,8 @@ fn main() {
             });
         })
         .invoke_handler(tauri::generate_handler![
-            async_write_to_pty,
-            async_resize_pty,
+            write_to_pty,
+            resize_pty,
             async_shell
         ])
         .run(tauri::generate_context!())

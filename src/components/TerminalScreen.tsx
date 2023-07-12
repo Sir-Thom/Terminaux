@@ -54,7 +54,7 @@ function TerminalScreen() {
 
     console.log("Resizing terminal");
     console.log(term.rows, term.cols);
-    await invoke("async_resize_pty", {
+    await invoke("resize_pty", {
       rows: term.rows,
       cols: term.cols,
     });
@@ -84,7 +84,7 @@ function TerminalScreen() {
   };
 
   const writeToPty = (data: string) => {
-    void invoke("async_write_to_pty", {
+    void invoke("write_to_pty", {
       data,
     });
   };
