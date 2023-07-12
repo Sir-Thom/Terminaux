@@ -11,7 +11,7 @@ use utils::app_state::AppState;
 #[tauri::command]
 pub async fn async_shell(state: State<'_, AppState>) -> Result<(), String> {
     #[cfg(target_os = "windows")]
-    let cmd = CommandBuilder::new("powershell.exe");
+    let mut cmd = CommandBuilder::new("powershell.exe");
     #[cfg(target_os = "windows")]
     cmd.env("TERM", "cygwin");
     #[cfg(not(target_os = "windows"))]
