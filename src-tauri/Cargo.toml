@@ -1,8 +1,8 @@
 [package]
-name = "Term-Solidjs"
+name = "terminaux"
 version = "0.0.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "A Tauri  Terminal"
+authors = ["Sir-Thom"]
 license = ""
 repository = ""
 edition = "2021"
@@ -13,7 +13,8 @@ edition = "2021"
 tauri-build = { version = "1.2.1", features = [] }
 
 [dependencies]
-tauri = { version = "1.2.4", features = [ "api-all",
+tauri = { version = "1.2.4", features = [ "shell-open",
+    "os-all",
     "linux-protocol-headers",
 ] }
 serde = { version = "1.0", features = ["derive"] }
