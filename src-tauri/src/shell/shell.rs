@@ -1,6 +1,5 @@
 use portable_pty::CommandBuilder;
 
-extern crate shells;
 use crate::utils;
 
 use std::process::exit;

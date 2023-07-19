@@ -1,10 +1,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-mod pty;
-mod shell;
-mod utils;
+
 use portable_pty::{native_pty_system, PtySize};
+
 use pty::pty::{resize_pty, write_to_pty};
-use shell::shell::async_shell;
 use std::{
     io::{BufRead, BufReader},
     sync::{Arc, Mutex},
@@ -12,8 +10,10 @@ use std::{
     time::Duration,
 };
 use tauri::async_runtime::Mutex as AsyncMutex;
-use utils::app_state::AppState;
-
+use terminaux::{
+    __cmd__async_shell, __cmd__resize_pty, __cmd__write_to_pty, pty, shell::shell::async_shell,
+    utils::app_state::AppState,
+};
 fn main() {
     let pty_system = native_pty_system();
 
