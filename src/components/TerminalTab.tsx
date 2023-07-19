@@ -28,7 +28,7 @@ function TerminalTab() {
   };
   console.log("activeTab", activeTab());
   return (
-    <div>
+    <div class="bg-gray-700">
       <ul class="flex space-x-2">
         {tabs().map((tab) => (
           <li
